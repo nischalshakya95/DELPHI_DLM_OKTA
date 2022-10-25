@@ -1,22 +1,7 @@
-/**
- * @license
- * Copyright (c) 2019 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at
- * http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at
- * http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at
- * http://polymer.github.io/CONTRIBUTORS.txt
- * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at
- * http://polymer.github.io/PATENTS.txt
- */
-
-import {LitElement, html, css} from 'lit-element';
-import axios from 'axios';
-import qs from 'qs';
-import OktaSignIn from '@okta/okta-signin-widget';
+import {css, html, LitElement} from 'lit-element';
+import oktaSignIn from './okta/okta-config';
 import '@okta/okta-signin-widget/dist/css/okta-sign-in.min.css';
+import {authenticate} from './service/okta-service';
 
 /**
  * An example element.
@@ -37,56 +22,42 @@ export class MyElement extends LitElement {
 
   static get properties() {
     return {
-      /**
-       * The name to say "Hello" to.
-       */
-      name: {type: String},
-
-      /**
-       * The number of times the button has been clicked.
-       */
-      count: {type: Number},
-
-      oktaAuth: {type: Object},
-
-      OktaSignIn: {type: Object},
-
-      oktaConfig: {type: Object},
+      isLogoutVisible: {type: Boolean},
     };
   }
 
   firstUpdated() {
-    this.oktaConfig = {
-      clientId: '0oa6ucohpvmcyHVGU5d7',
-      issuer: 'https://dev-74151855.okta.com/oauth2/default',
-      redirectUri: `${window.location.origin}`,
-      scopes: ['openid', 'profile', 'email'],
-      useInteractiveCodeFlow: true,
-      pkce: false
-    };
-    const oktaSignIn = new OktaSignIn(this.oktaConfig);
-
     oktaSignIn.authClient.token.getUserInfo().then(
-      function (user) {
-        console.log(user);
-        document.getElementById('messageBox').innerHTML =
-          'Hello, ' + user.email + '! You are *still* logged in! :)';
-        document.getElementById('logout').style.display = 'block';
+      (user) => {
+        authenticate()
+          .then((response) => {
+            document.getElementById('messageBox').innerHTML =
+              'Hello, ' +
+              response.data.email +
+              '! You are *still* logged in! :)';
+          })
+          .catch((error) => {
+            document.getElementById('messageBox').innerHTML =
+              'Hello, ' + user.email + '! You are *still* logged in! :)';
+          });
+        this.isLogoutVisible = true;
       },
-      function (error) {
+      () => {
         oktaSignIn
           .showSignInToGetTokens({
             el: '#okta-login-container',
           })
-          .then(function (tokens) {
-            console.log(tokens);
+          .then((tokens) => {
             oktaSignIn.authClient.tokenManager.setTokens(tokens);
             oktaSignIn.remove();
 
-            const idToken = tokens.idToken;
-            document.getElementById('messageBox').innerHTML =
-              'Hello, ' + idToken.claims.email + '! You just logged in! :)';
-            document.getElementById('logout').style.display = 'block';
+            authenticate().then((response) => {
+              document.getElementById('messageBox').innerHTML =
+                'Hello, ' +
+                response.data.email +
+                '! You are *still* logged in! :)';
+            });
+            this.isLogoutVisible = true;
           })
           .catch(function (err) {
             console.error(err);
@@ -97,48 +68,21 @@ export class MyElement extends LitElement {
 
   constructor() {
     super();
+    this.isLogoutVisible = false;
   }
 
   render() {
-    return html` <slot></slot> `;
-  }
-
-  async _onLogin() {
-    await this.oktaAuth.signInWithRedirect();
-    this._getCode();
+    return html`
+      ${this.isLogoutVisible
+        ? html` <button @click="${this._onLogout}">Logout</button>`
+        : ''}
+      <slot></slot>
+    `;
   }
 
   async _onLogout() {
-    await this.oktaAuth.signOut();
-  }
-
-  _getCode() {
-    let searchParams = new URLSearchParams(window.location.search);
-    let code = searchParams.get('code');
-    let transactionStorage = JSON.parse(
-      localStorage.getItem('okta-shared-transaction-storage')
-    );
-    let transactionStorageValues = Object.values(transactionStorage);
-    let codeVerifier =
-      transactionStorageValues[transactionStorageValues.length - 1].transaction
-        .codeVerifier;
-    let tokenURL = 'https://dev-74151855.okta.com/oauth2/default/v1/token';
-    let data = {
-      grant_type: 'authorization_code',
-      client_id: '0oa6ucohpvmcyHVGU5d7',
-      redirect_uri: 'http://localhost:3000',
-      code_verifier: codeVerifier,
-      code: code,
-    };
-    axios
-      .post(tokenURL, qs.stringify(data))
-      .then((response) => console.log(response))
-      .catch((error) => console.log(error));
-  }
-
-  _getOktaToken() {
-    let accessToken = this.oktaAuth.getAccessToken();
-    console.log(accessToken);
+    this.isLogoutVisible = false;
+    await oktaSignIn.authClient.signOut();
   }
 }
 

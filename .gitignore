@@ -2,3 +2,5 @@
 
 # only generated for size check
 my-element.bundled.js
+.idea
+.vscode 

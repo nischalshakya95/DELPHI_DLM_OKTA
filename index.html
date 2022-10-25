@@ -1,19 +1,38 @@
-<!doctype html>
+<!DOCTYPE html>
 
 <html>
   <head>
-    <meta charset="utf-8">
-    <title>&lt;my-element> Demo</title>
+    <meta charset="utf-8" />
+    <title>Okta POC</title>
     <script type="module" src="./my-element.js"></script>
     <style>
       p {
         border: solid 1px blue;
         padding: 8px;
       }
+      .container{
+        width: 500px;
+        margin: auto;
+      }
     </style>
   </head>
   <body>
-    <my-element>
-    </my-element>
+    <div class="container">
+      <h1 class="text-center">Simple Web Page</h1>
+      <div id="messageBox" class="jumbotron">
+        You are not logged in.
+      </div>
+      <!-- where the sign-in form appears -->
+      <div id="okta-login-container"></div>
+      <button
+        id="logout"
+        class="button"
+        onclick="logout()"
+        style="display: none;"
+      >
+        Logout
+      </button>
+      <my-element></my-element>
+    </div>
   </body>
 </html>

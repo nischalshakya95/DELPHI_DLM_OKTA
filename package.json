@@ -35,6 +35,7 @@
   "dependencies": {
     "@okta/okta-auth-js": "7.0.0",
     "@okta/okta-signin-widget": "^6.8.3",
+    "@vaadin/router": "^1.7.4",
     "axios": "^1.1.2",
     "lit-element": "^2.3.1",
     "vite": "^3.1.7"

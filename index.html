@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <title>Okta POC</title>
-    <script type="module" src="./my-element.js"></script>
+    <script type="module" src='components/app.js'></script>
     <style>
       p {
         border: solid 1px blue;
@@ -22,13 +22,8 @@
   </head>
   <body>
     <div class="container">
-      <div id="hidden">
-        <h1 class="text-center">Simple Web Page</h1>
-        <div id="messageBox" class="jumbotron">You are not logged in.</div>
-      </div>
-      <!-- where the sign-in form appears -->
+      <app-component></app-component>
       <div id="okta-login-container"></div>
-      <my-element></my-element>
     </div>
   </body>
 </html>
